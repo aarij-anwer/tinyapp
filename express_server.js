@@ -10,6 +10,33 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+//returns a random character from a to z
+const pickRandomChar = function() {
+  //get a number between 97 and 122, corresponding to the ASCII characters a-z in lowercsae
+  let number = Math.round(Math.random() * (123 - 97) + 97);
+  return String.fromCharCode(number);
+};
+
+//returns a random integer from 0 to 9
+const pickRandomNum = function() {
+  return Math.round(Math.random() * 9);
+};
+
+//returns a string of 6 random alphanumeric characters
+const generateRandomString = function() {
+  let answer = "";
+
+  for (let i = 0; i < 6; i++) {
+    if (Math.random() > 0.5) {
+      answer += pickRandomChar();
+    } else {
+      answer += pickRandomNum();
+    }
+  }
+  return answer;
+};
+
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -25,6 +52,12 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
+});
+
+app.post("/urls", (req, res) => {
+  let URL = req.body.longURL;
+  console.log(req.body);
+  res.send("OK");
 });
 
 app.get("/urls/new", (req, res) => {
