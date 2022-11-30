@@ -13,7 +13,7 @@ const urlDatabase = {
 //returns a random character from a to z
 const pickRandomChar = function() {
   //get a number between 97 and 122, corresponding to the ASCII characters a-z in lowercsae
-  let number = Math.round(Math.random() * (123 - 97) + 97);
+  let number = Math.round(Math.random() * (122 - 97) + 97);
   return String.fromCharCode(number);
 };
 
@@ -56,8 +56,9 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let URL = req.body.longURL;
-  console.log(req.body);
-  res.send("OK");
+  let key = generateRandomString();
+  urlDatabase[key] = URL;
+  res.redirect("/urls/" + key);
 });
 
 app.get("/urls/new", (req, res) => {
