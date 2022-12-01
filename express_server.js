@@ -66,10 +66,18 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  let URL = req.body.longURL;
-  let key = generateRandomString();
+  const URL = req.body.longURL;
+  const key = generateRandomString();
   urlDatabase[key] = ensureHTTP(URL);
   res.redirect("/urls/" + key);
+});
+
+app.post("/urls/:id", (req, res) => {
+  const URL = req.body.newURL;
+  const key = req.params.id;
+  urlDatabase[key] = ensureHTTP(URL);
+  res.redirect("/urls/");
+
 });
 
 app.get("/urls/new", (req, res) => {
@@ -90,8 +98,8 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
-  delete urlDatabase[id];
+  const key = req.params.id;
+  delete urlDatabase[key];
   res.redirect("/urls/");
 });
 
