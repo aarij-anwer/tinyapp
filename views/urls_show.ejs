@@ -18,7 +18,10 @@
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">
-          Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
+          Short URL ID: <a href="/u/<%= id %>" target="_blank"><%= id %></a>
+        </p>
+        <p class="card-text">
+          <a href="/urls">Back</a>
         </p>
       </div>
       <div class="card-footer text-muted"></div>

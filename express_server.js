@@ -36,6 +36,17 @@ const generateRandomString = function() {
   return answer;
 };
 
+//if URL doesn't have http:// prefixed, adds http:// and returns the new URL, otherwise returns URL
+const ensureHTTP = function(URL) {
+  let answer;
+  if (URL.search("http://") === 0) {
+    answer = URL;
+  } else {
+    answer = "http://" + URL;
+  }
+  return answer;
+};
+
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -57,7 +68,7 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   let URL = req.body.longURL;
   let key = generateRandomString();
-  urlDatabase[key] = URL;
+  urlDatabase[key] = ensureHTTP(URL);
   res.redirect("/urls/" + key);
 });
 
@@ -76,6 +87,12 @@ app.get("/urls/:id", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
+});
+
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  delete urlDatabase[id];
+  res.redirect("/urls/");
 });
 
 app.listen(PORT, () => {
