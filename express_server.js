@@ -14,11 +14,30 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 
+/////////////////////////////////////////////////////////////////////////////
+//  DB
+/////////////////////////////////////////////////////////////////////////////
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
+/////////////////////////////////////////////////////////////////////////////
+//  Helper Functions
+/////////////////////////////////////////////////////////////////////////////
 //returns a random character from a to z
 const pickRandomChar = function() {
   //get a number between 97 and 122, corresponding to the ASCII characters a-z in lowercsae
@@ -34,7 +53,7 @@ const pickRandomNum = function() {
 //returns a string of 6 random alphanumeric characters
 const generateRandomString = function() {
   let answer = "";
-
+  
   for (let i = 0; i < 6; i++) {
     if (Math.random() > 0.5) {
       answer += pickRandomChar();
@@ -57,6 +76,9 @@ const ensureHTTP = function(URL) {
 };
 
 
+/////////////////////////////////////////////////////////////////////////////
+//  Routes
+/////////////////////////////////////////////////////////////////////////////
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -140,7 +162,15 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  res.send(email + " " + password);
+  const id = generateRandomString();
+
+  users[id] = {
+    id,
+    email,
+    password
+  };
+  res.cookie("user_id", id);
+  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
