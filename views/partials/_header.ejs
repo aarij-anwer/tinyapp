@@ -30,7 +30,11 @@
         <button type="submit" class="btn btn-primary">Login</button>
     </form>
     <% } else { %>
-    <p>Logged in as: <%= username %>!</p>
+    <p>Logged in as: <%= username %>! 
+      <form method="POST" action="/logout" class="form-inline">
+        <button type="submit" class="btn btn-primary">Logout</button>
+      </form>
+    </p>
     <% } %>
   </nav>
 </header>
