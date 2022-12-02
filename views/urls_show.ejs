@@ -21,7 +21,7 @@
           Short URL ID: <a href="/u/<%= id %>" target="_blank"><%= id %></a>
         </p>
         <h5 class="card-title">Edit</h5>
-        <form class="form-inline" action="/urls/<%= id %>" method="POST">
+        <form class="form-inline d-flex justify-content-center" action="/urls/<%= id %>" method="POST">
           <div class="form-group mb-2">
             <label for="longURL">New URL:</label>
             <input
@@ -34,7 +34,7 @@
             <button type="submit" class="btn btn-primary">Submit</button>
           </div>
         </form>
-          <p class="card-text">
+        <p class="card-text">
           <a href="/urls">Back</a>
         </p>
       </div>
