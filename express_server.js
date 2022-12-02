@@ -75,6 +75,15 @@ const ensureHTTP = function(URL) {
   return answer;
 };
 
+const userExists = function(email) {
+  for (const id in users) {
+    if (email === users[id].email) {
+      //we have a match, user exists!
+      return true;
+    }
+  }
+  return false;
+};
 
 /////////////////////////////////////////////////////////////////////////////
 //  Routes
@@ -171,6 +180,16 @@ app.post("/register", (req, res) => {
   const password = req.body.password;
   const id = generateRandomString();
 
+  if ((!email) && (!password)) {
+    console.log("400 - no email and password");
+    return res.status(400).send("<p>Please enter an email and password!</p><a href=\"/register\">Go back</a>");
+  }
+  
+  if (userExists(email)) {
+    console.log("400 - user exists!");
+    return res.status(400).send("<p>Email address already exists!</p><a href=\"/register\">Go back</a>");
+  }
+
   users[id] = {
     id,
     email,
@@ -179,6 +198,7 @@ app.post("/register", (req, res) => {
   console.log(users);
   res.cookie("user_id", id);
   res.redirect("/urls");
+
 });
 
 app.listen(PORT, () => {
