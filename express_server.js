@@ -39,6 +39,11 @@ const users = {
     email: "user@example.com",
     password: "purple-monkey-dinosaur",
   },
+  qutoof: {
+    id: "qutoof",
+    email: "admin@qutoofacademy.com",
+    password: "1234",
+  },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
@@ -111,6 +116,7 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+// Route for displaying all the URLs
 app.get("/urls", (req, res) => {
   const user = users[req.cookies.user_id];
 
@@ -118,9 +124,10 @@ app.get("/urls", (req, res) => {
     urls: urlDatabase2,
     user
   };
-  res.render("urls_index", templateVars); 
+  res.render("urls_index", templateVars);
 });
 
+// Route for creating a new URL and adding it to DB, only allowed for logged in users
 app.post("/urls", (req, res) => {
   const user = users[req.cookies.user_id];
 
@@ -141,14 +148,27 @@ app.post("/urls", (req, res) => {
   }
 });
 
+// Route for editing an existing URL from the DB
 app.post("/urls/:id", (req, res) => {
   const URL = req.body.newURL;
   const key = req.params.id;
-  urlDatabase[key] = ensureHTTP(URL);
-  res.redirect("/urls/");
+  const user = users[req.cookies.user_id];
 
+  if (user) {
+  // user is logged in
+    const urlObject = {
+      longURL: ensureHTTP(URL),
+      userID: user.id
+    };
+    urlDatabase2[key] = urlObject;
+    console.log(urlDatabase2);
+    res.redirect("/urls/");
+  } else {
+    res.send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
+  }
 });
 
+// Route for viewing the create URL form, only allowed for logged in users
 app.get("/urls/new", (req, res) => {
   const user = users[req.cookies.user_id];
 
