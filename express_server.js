@@ -21,35 +21,36 @@ app.use(cookieParser());
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
-    userID: "aJ48lW",
+    userID: "qutoof",
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
-    userID: "aJ48lW",
+    userID: "aarij",
   }
 };
 
 const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+  aarij: {
+    id: "aarij",
+    email: "aarij.anwer@gmail.com",
+    password: "1234",
   },
   qutoof: {
     id: "qutoof",
     email: "admin@qutoofacademy.com",
     password: "1234",
   },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
+  maha: {
+    id: "maha",
+    email: "maha@maha.com",
+    password: "maha",
   },
 };
 
 /////////////////////////////////////////////////////////////////////////////
 //  Helper Functions
 /////////////////////////////////////////////////////////////////////////////
+
 //returns a random character from a to z
 const pickRandomChar = function() {
   //get a number between 97 and 122, corresponding to the ASCII characters a-z in lowercsae
@@ -71,6 +72,22 @@ const generateRandomString = function() {
       answer += pickRandomChar();
     } else {
       answer += pickRandomNum();
+    }
+  }
+  return answer;
+};
+
+const urlsForUser = function(userID) {
+  let urlObject;
+  let answer = {};
+
+  for (const id in urlDatabase) {
+    if (urlDatabase[id].userID === userID) {
+      urlObject = {
+        longURL: urlDatabase[id].longURL,
+        userID
+      };
+      answer[id] = urlObject;
     }
   }
   return answer;
@@ -115,11 +132,21 @@ app.get("/hello", (req, res) => {
 // Route for displaying all the URLs
 app.get("/urls", (req, res) => {
   const user = users[req.cookies.user_id];
+  let templateVars = {};
 
-  const templateVars = {
-    urls: urlDatabase,
-    user
-  };
+  console.log(user);
+
+  if (user) {
+    templateVars = {
+      urls: urlsForUser(user.id),
+      user
+    };
+  } else {
+    templateVars = {
+      urls: "",
+      user
+    };
+  }
   res.render("urls_index", templateVars);
 });
 
@@ -184,12 +211,27 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies.user_id];
 
-  const templateVars = {
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id].longURL,
-    user
-  };
-  res.render("urls_show", templateVars);
+  if (user) {
+    //user is logged in
+    const templateVars = {
+      id: req.params.id,
+      longURL: urlDatabase[req.params.id].longURL,
+      user
+    };
+
+    //check if the URL was created by the user
+    if (urlDatabase[req.params.id].userID !== user.id) {
+      //not created by the user, show error
+      res.send("<p>You are not allowed to view this URL. You can only view your own URLs. </p><p>Click <a href=\"/urls\">here</a> to go back.");
+    } else {
+      //created by user, render the page correctly
+      res.render("urls_show", templateVars);
+    }
+
+  } else {
+    //user is not logged in
+    res.send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
+  }
 });
 
 // Route for redirecting from short URL `id` to actual URL
