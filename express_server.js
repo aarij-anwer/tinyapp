@@ -75,14 +75,14 @@ const ensureHTTP = function(URL) {
   return answer;
 };
 
-const userExists = function(email) {
+//returns user object for user in DB with `email`, null otherwise
+const getUser = function(email) {
   for (const id in users) {
     if (email === users[id].email) {
-      //we have a match, user exists!
-      return true;
+      return users[id];
     }
   }
-  return false;
+  return null;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -156,15 +156,9 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls/");
 });
 
-app.post("/login", (req, res) => {
-  const username = req.body.username;
-  res.cookie("username", username);
-  res.redirect("/urls");
-});
-
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
-  res.redirect("/urls");
+  res.clearCookie("user_id");
+  res.redirect("/login");
 });
 
 app.get("/register", (req, res) => {
@@ -180,12 +174,12 @@ app.post("/register", (req, res) => {
   const password = req.body.password;
   const id = generateRandomString();
 
-  if ((!email) && (!password)) {
+  if ((!email) || (!password)) {
     console.log("400 - no email and password");
     return res.status(400).send("<p>Please enter an email and password!</p><a href=\"/register\">Go back</a>");
   }
   
-  if (userExists(email)) {
+  if (getUser(email)) {
     console.log("400 - user exists!");
     return res.status(400).send("<p>Email address already exists!</p><a href=\"/register\">Go back</a>");
   }
@@ -206,6 +200,34 @@ app.get("/login", (req, res) => {
     user
   };
   res.render("urls_login", templateVars);
+});
+
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  console.log(email);
+
+  if ((!email) || (!password)) {
+    console.log("400 - no email and password");
+    return res.status(400).send("<p>Please enter an email and password!</p><a href=\"/login\">Go back</a>");
+  }
+  
+  const user = getUser(email);
+  console.log(user);
+  if (!user) {
+    console.log("403 - user doesn't exist");
+    return res.status(403).send("<p>User does not exist!</p><a href=\"/login\">Go back</a>");
+  }
+  
+  if (user.password !== password) {
+    console.log("403 - incorrect password!");
+    return res.status(403).send("<p>Incorrect password!</p><a href=\"/login\">Go back</a>");
+  }
+
+  res.cookie("user_id", user.id);
+  res.redirect("/urls");
+
 });
 
 app.listen(PORT, () => {
