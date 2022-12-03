@@ -104,7 +104,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+  res.json(urlDatabase2);
 });
 
 app.get("/hello", (req, res) => {
@@ -115,10 +115,10 @@ app.get("/urls", (req, res) => {
   const user = users[req.cookies.user_id];
 
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlDatabase2,
     user
   };
-  res.render("urls_index", templateVars);
+  res.render("urls_index", templateVars); 
 });
 
 app.post("/urls", (req, res) => {
@@ -128,7 +128,13 @@ app.post("/urls", (req, res) => {
     //user is logged in
     const URL = req.body.longURL;
     const key = generateRandomString();
-    urlDatabase[key] = ensureHTTP(URL);
+    const urlObject = {
+      longURL: ensureHTTP(URL),
+      userID: user.id
+    };
+    urlDatabase2[key] = urlObject;
+
+    console.log(urlDatabase2);
     res.redirect("/urls/" + key);
   } else {
     res.send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
