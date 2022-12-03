@@ -111,10 +111,17 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const URL = req.body.longURL;
-  const key = generateRandomString();
-  urlDatabase[key] = ensureHTTP(URL);
-  res.redirect("/urls/" + key);
+  const user = users[req.cookies.user_id];
+
+  if (user) {
+    //user is logged in
+    const URL = req.body.longURL;
+    const key = generateRandomString();
+    urlDatabase[key] = ensureHTTP(URL);
+    res.redirect("/urls/" + key);
+  } else {
+    res.send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
+  }
 });
 
 app.post("/urls/:id", (req, res) => {
@@ -131,7 +138,13 @@ app.get("/urls/new", (req, res) => {
   const templateVars = {
     user
   };
-  res.render("urls_new", templateVars);
+  if (user) {
+    //user is logged in
+    res.render("urls_new", templateVars);
+  } else {
+    //user is not logged in
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -147,7 +160,12 @@ app.get("/urls/:id", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+
+  if (longURL) {
+    res.redirect(longURL);
+  } else {
+    res.send(`<p>URL for ${req.params.id} doesn't exist!</p><a href=\"/urls\">Go back</a>`);
+  }
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -166,7 +184,12 @@ app.get("/register", (req, res) => {
   const templateVars = {
     user
   };
-  res.render("urls_register", templateVars);
+  if (user) {
+    //user is logged in
+    res.redirect("/urls");
+  } else {
+    res.render("urls_register", templateVars);
+  }
 });
 
 app.post("/register", (req, res) => {
@@ -199,7 +222,13 @@ app.get("/login", (req, res) => {
   const templateVars = {
     user
   };
-  res.render("urls_login", templateVars);
+  if (user) {
+    //user is already logged in
+    res.redirect("/urls");
+  } else {
+    //user is not logged in
+    res.render("urls_login", templateVars);
+  }
 });
 
 app.post("/login", (req, res) => {
