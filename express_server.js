@@ -17,12 +17,8 @@ app.use(cookieParser());
 /////////////////////////////////////////////////////////////////////////////
 //  DB
 /////////////////////////////////////////////////////////////////////////////
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
 
-const urlDatabase2 = {
+const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
     userID: "aJ48lW",
@@ -109,7 +105,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase2);
+  res.json(urlDatabase);
 });
 
 app.get("/hello", (req, res) => {
@@ -121,7 +117,7 @@ app.get("/urls", (req, res) => {
   const user = users[req.cookies.user_id];
 
   const templateVars = {
-    urls: urlDatabase2,
+    urls: urlDatabase,
     user
   };
   res.render("urls_index", templateVars);
@@ -139,9 +135,9 @@ app.post("/urls", (req, res) => {
       longURL: ensureHTTP(URL),
       userID: user.id
     };
-    urlDatabase2[key] = urlObject;
+    urlDatabase[key] = urlObject;
 
-    console.log(urlDatabase2);
+    console.log(urlDatabase);
     res.redirect("/urls/" + key);
   } else {
     res.send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
@@ -160,8 +156,8 @@ app.post("/urls/:id", (req, res) => {
       longURL: ensureHTTP(URL),
       userID: user.id
     };
-    urlDatabase2[key] = urlObject;
-    console.log(urlDatabase2);
+    urlDatabase[key] = urlObject;
+    console.log(urlDatabase);
     res.redirect("/urls/");
   } else {
     res.send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
@@ -184,19 +180,21 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+// Route for displaying an individual short URL
 app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies.user_id];
 
   const templateVars = {
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id].longURL,
     user
   };
   res.render("urls_show", templateVars);
 });
 
+// Route for redirecting from short URL `id` to actual URL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
 
   if (longURL) {
     res.redirect(longURL);
@@ -208,7 +206,7 @@ app.get("/u/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const key = req.params.id;
   delete urlDatabase[key];
-  res.redirect("/urls/");
+  res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
