@@ -114,6 +114,10 @@ const getUser = function(email) {
   return null;
 };
 
+const correctUser = function(userObject,urlObject) {
+  return urlObject.userID === userObject.id;
+};
+
 /////////////////////////////////////////////////////////////////////////////
 //  Routes
 /////////////////////////////////////////////////////////////////////////////
@@ -167,27 +171,38 @@ app.post("/urls", (req, res) => {
     console.log(urlDatabase);
     res.redirect("/urls/" + key);
   } else {
-    res.send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
+    res.status(401).send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
   }
 });
 
 // Route for editing an existing URL from the DB
 app.post("/urls/:id", (req, res) => {
   const URL = req.body.newURL;
-  const key = req.params.id;
   const user = users[req.cookies.user_id];
+  const urlID = req.params.id;
+  const urlObject = urlDatabase[urlID];
 
-  if (user) {
-  // user is logged in
+  if (!user) {
+    //user is not logged in
+    res.status(401).send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
+
+  } else if (!urlObject) {
+    //incorrect URL ID was sent by the client
+    res.status(404).send("<p>The URL is not found. </p><p>Click <a href=\"/urls\">here</a> to go back.");
+
+  } else if (!correctUser(user,urlObject)) {
+    //user is trying to access URLs that they did not create
+    res.status(403).send("<p>You are not allowed to view this URL. You can only view your own URLs. </p><p>Click <a href=\"/urls\">here</a> to go back.");
+
+  } else {
+    // everything is good!
     const urlObject = {
       longURL: ensureHTTP(URL),
       userID: user.id
     };
-    urlDatabase[key] = urlObject;
+    urlDatabase[urlID] = urlObject;
     console.log(urlDatabase);
     res.redirect("/urls/");
-  } else {
-    res.send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
   }
 });
 
@@ -210,52 +225,96 @@ app.get("/urls/new", (req, res) => {
 // Route for displaying an individual short URL
 app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies.user_id];
+  const urlID = req.params.id;
+  const urlObject = urlDatabase[urlID];
 
-  if (user) {
-    //user is logged in
-    const templateVars = {
-      id: req.params.id,
-      longURL: urlDatabase[req.params.id].longURL,
-      user
-    };
+  if (!user) {
+    //user is not logged in
+    res.status(401).send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
 
-    //check if the URL was created by the user
-    if (urlDatabase[req.params.id].userID !== user.id) {
-      //not created by the user, show error
-      res.send("<p>You are not allowed to view this URL. You can only view your own URLs. </p><p>Click <a href=\"/urls\">here</a> to go back.");
-    } else {
-      //created by user, render the page correctly
-      res.render("urls_show", templateVars);
-    }
+  } else if (!urlObject) {
+    //incorrect URL ID was sent by the client
+    res.status(404).send("<p>The URL is not found. </p><p>Click <a href=\"/urls\">here</a> to go back.");
+
+  } else if (!correctUser(user,urlObject)) {
+    //user is trying to access URLs that they did not create
+    res.status(403).send("<p>You are not allowed to view this URL. You can only view your own URLs. </p><p>Click <a href=\"/urls\">here</a> to go back.");
 
   } else {
-    //user is not logged in
-    res.send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
+    // everything is good!
+
+    const templateVars = {
+      id: urlID,
+      longURL: urlObject.longURL,
+      user
+    };
+    res.render("urls_show", templateVars);
   }
 });
 
 // Route for redirecting from short URL `id` to actual URL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id].longURL;
-
-  if (longURL) {
-    res.redirect(longURL);
+  const urlID = req.params.id;
+  const urlObject = urlDatabase[urlID];
+ 
+  if (!urlObject) {
+    //incorrect ID was passed by client for redirection
+    res.status(404).send(`<p>URL for ${req.params.id} doesn't exist!</p><a href="/urls">Go back</a>`);
   } else {
-    res.send(`<p>URL for ${req.params.id} doesn't exist!</p><a href="/urls">Go back</a>`);
+
+    const longURL = urlObject.longURL;
+    const user = users[req.cookies.user_id];
+
+    if (!user) {
+      //user is not logged in
+      res.status(401).send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
+
+    } else if (!correctUser(user,urlObject)) {
+      //user is trying to access URLs that they did not create
+      res.status(403).send("<p>You are not allowed to view this URL. You can only view your own URLs. </p><p>Click <a href=\"/urls\">here</a> to go back.");
+
+    } else if (!longURL) {
+      //incorrect URL
+      res.status(404).send(`<p>URL for ${req.params.id} doesn't exist!</p><a href="/urls">Go back</a>`);
+
+    } else {
+      res.redirect(longURL);
+    }
   }
 });
 
+// Route for delete
 app.post("/urls/:id/delete", (req, res) => {
-  const key = req.params.id;
-  delete urlDatabase[key];
-  res.redirect("/urls");
+  const user = users[req.cookies.user_id];
+  const urlID = req.params.id;
+  const urlObject = urlDatabase[urlID];
+
+  if (!user) {
+    //user is not logged in
+    res.status(401).send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
+
+  } else if (!urlObject) {
+    //incorrect URL ID was sent by the client
+    res.status(404).send("<p>The URL is not found. </p><p>Click <a href=\"/urls\">here</a> to go back.");
+
+  } else if (!correctUser(user,urlObject)) {
+    //user is trying to access URLs that they did not create
+    res.status(403).send("<p>You are not allowed to delete this URL. You can only view your own URLs. </p><p>Click <a href=\"/urls\">here</a> to go back.");
+
+  } else {
+    // everything is good!
+    delete urlDatabase[urlID];
+    res.redirect("/urls");
+  }
 });
 
+// Route for logout
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/login");
 });
 
+// Route for displaying registration page
 app.get("/register", (req, res) => {
   const user = users[req.cookies.user_id];
   const templateVars = {
@@ -269,21 +328,23 @@ app.get("/register", (req, res) => {
   }
 });
 
+// Route for submitting registration
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const id = generateRandomString();
 
   if ((!email) || (!password)) {
-    console.log("400 - no email and password");
+    //no email and/or password provided
     return res.status(400).send("<p>Please enter an email and password!</p><a href=\"/register\">Go back</a>");
   }
   
   if (getUser(email)) {
-    console.log("400 - user exists!");
+    //user already exists
     return res.status(400).send("<p>Email address already exists!</p><a href=\"/register\">Go back</a>");
   }
 
+  //everything is good
   users[id] = {
     id,
     email,
@@ -294,6 +355,7 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
+// Route for viewing login page
 app.get("/login", (req, res) => {
   const user = users[req.cookies.user_id];
   const templateVars = {
@@ -308,6 +370,7 @@ app.get("/login", (req, res) => {
   }
 });
 
+// Route for submitting and logging in
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -315,19 +378,19 @@ app.post("/login", (req, res) => {
   console.log(email);
 
   if ((!email) || (!password)) {
-    console.log("400 - no email and password");
+    //no email and/or password provided
     return res.status(400).send("<p>Please enter an email and password!</p><a href=\"/login\">Go back</a>");
   }
   
   const user = getUser(email);
   console.log(user);
   if (!user) {
-    console.log("403 - user doesn't exist");
+    //user does not exist
     return res.status(403).send("<p>User does not exist!</p><a href=\"/login\">Go back</a>");
   }
   
   if (user.password !== password) {
-    console.log("403 - incorrect password!");
+    //incorrect password
     return res.status(403).send("<p>Incorrect password!</p><a href=\"/login\">Go back</a>");
   }
 
