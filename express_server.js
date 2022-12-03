@@ -77,21 +77,6 @@ const generateRandomString = function() {
   return answer;
 };
 
-const urlsForUser = function(userID) {
-  let urlObject;
-  let answer = {};
-
-  for (const id in urlDatabase) {
-    if (urlDatabase[id].userID === userID) {
-      urlObject = {
-        longURL: urlDatabase[id].longURL,
-        userID
-      };
-      answer[id] = urlObject;
-    }
-  }
-  return answer;
-};
 
 //if URL doesn't have http:// prefixed, adds http:// and returns the new URL, otherwise returns URL
 const ensureHTTP = function(URL) {
@@ -114,6 +99,24 @@ const getUser = function(email) {
   return null;
 };
 
+//returns an object `{longURL, userID}` from the DB that matches the `userID` argument, {} if none found
+const urlsForUser = function(userID) {
+  let urlObject;
+  let answer = {};
+
+  for (const id in urlDatabase) {
+    if (urlDatabase[id].userID === userID) {
+      urlObject = {
+        longURL: urlDatabase[id].longURL,
+        userID
+      };
+      answer[id] = urlObject;
+    }
+  }
+  return answer;
+};
+
+//returns true if the user ID of urlObject is the same as the user ID of logged in user, false otherwise
 const correctUser = function(userObject,urlObject) {
   return urlObject.userID === userObject.id;
 };
