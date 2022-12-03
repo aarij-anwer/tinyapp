@@ -3,6 +3,7 @@
 /////////////////////////////////////////////////////////////////////////////
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const morgan = require('morgan');
 
 /////////////////////////////////////////////////////////////////////////////
 //  Middleware
@@ -12,7 +13,7 @@ const PORT = 8080;
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
+app.use(morgan('dev'));
 
 /////////////////////////////////////////////////////////////////////////////
 //  DB
@@ -140,8 +141,6 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   const user = users[req.cookies.user_id];
   let templateVars = {};
-
-  console.log(user);
 
   if (user) {
     templateVars = {
@@ -378,15 +377,12 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  console.log(email);
-
   if ((!email) || (!password)) {
     //no email and/or password provided
     return res.status(400).send("<p>Please enter an email and password!</p><a href=\"/login\">Go back</a>");
   }
   
   const user = getUser(email);
-  console.log(user);
   if (!user) {
     //user does not exist
     return res.status(403).send("<p>User does not exist!</p><a href=\"/login\">Go back</a>");
