@@ -22,6 +22,17 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const urlDatabase2 = {
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  }
+};
+
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -164,7 +175,7 @@ app.get("/u/:id", (req, res) => {
   if (longURL) {
     res.redirect(longURL);
   } else {
-    res.send(`<p>URL for ${req.params.id} doesn't exist!</p><a href=\"/urls\">Go back</a>`);
+    res.send(`<p>URL for ${req.params.id} doesn't exist!</p><a href="/urls">Go back</a>`);
   }
 });
 
