@@ -198,7 +198,14 @@ app.post("/register", (req, res) => {
   console.log(users);
   res.cookie("user_id", id);
   res.redirect("/urls");
+});
 
+app.get("/login", (req, res) => {
+  const user = users[req.cookies.user_id];
+  const templateVars = {
+    user
+  };
+  res.render("urls_login", templateVars);
 });
 
 app.listen(PORT, () => {
