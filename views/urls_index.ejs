@@ -17,7 +17,9 @@
 <body>
   <%- include('partials/_header') %>
   <% if (!user) { %>
+    <main style="margin: 1em;">
     <p>You must be logged in to view the URLS!</p>
+    </main>
   <% } else { %>
     <main style="margin: 1em;">
       <h3>My URLs</h3>
@@ -49,6 +51,7 @@
           <% } %>
         </tbody>
       </table>
+      <a href="/urls/new">Create a New Short Link</a>
     </main>
   <% } %>
   <!-- Bootstrap JS -->

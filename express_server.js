@@ -134,16 +134,20 @@ const correctUser = function(userObject,urlObject) {
 /////////////////////////////////////////////////////////////////////////////
 //  Routes
 /////////////////////////////////////////////////////////////////////////////
+
+// Route for "/", if logged in the client is redirected to "/urls" otherwise to the login page
 app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  const user = users[req.session.user_id];
+  const templateVars = {
+    user
+  };
+  if (user) {
+    //user is already logged in
+    res.redirect("/urls");
+  } else {
+    //user is not logged in
+    res.render("urls_login", templateVars);
+  }
 });
 
 // Route for displaying all the URLs
@@ -194,13 +198,13 @@ app.post("/urls/:id", (req, res) => {
   const urlID = req.params.id;
   const urlObject = urlDatabase[urlID];
 
-  if (!user) {
-    //user is not logged in
-    res.status(401).send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
-
-  } else if (!urlObject) {
+  if (!urlObject) {
     //incorrect URL ID was sent by the client
     res.status(404).send("<p>The URL is not found. </p><p>Click <a href=\"/urls\">here</a> to go back.");
+    
+  } else if (!user) {
+    //user is not logged in
+    res.status(401).send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
 
   } else if (!correctUser(user,urlObject)) {
     //user is trying to access URLs that they did not create
@@ -240,13 +244,13 @@ app.get("/urls/:id", (req, res) => {
   const urlID = req.params.id;
   const urlObject = urlDatabase[urlID];
 
-  if (!user) {
-    //user is not logged in
-    res.status(401).send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
-
-  } else if (!urlObject) {
+  if (!urlObject) {
     //incorrect URL ID was sent by the client
     res.status(404).send("<p>The URL is not found. </p><p>Click <a href=\"/urls\">here</a> to go back.");
+
+  } else if (!user) {
+    //user is not logged in
+    res.status(401).send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
 
   } else if (!correctUser(user,urlObject)) {
     //user is trying to access URLs that they did not create
