@@ -4,6 +4,9 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
+const bcrypt = require("bcryptjs");
+const password = "1234";
+const cookieSession = require('cookie-session');
 
 /////////////////////////////////////////////////////////////////////////////
 //  Middleware
@@ -14,6 +17,12 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
+app.use(cookieSession({
+  // Mandatory properties.
+  name: 'session', // Name of the cookie (shows in the browser.)
+  keys: ['secrets', 'can be', 'rotated'], // Used for encrypting values.
+  maxAge: 24 * 60 * 60 * 1000 // Expire the identifying cookie / session in 24 hours.
+}));
 
 /////////////////////////////////////////////////////////////////////////////
 //  DB
@@ -34,17 +43,17 @@ const users = {
   aarij: {
     id: "aarij",
     email: "aarij.anwer@gmail.com",
-    password: "1234",
+    password: bcrypt.hashSync(password, 10),
   },
   qutoof: {
     id: "qutoof",
     email: "admin@qutoofacademy.com",
-    password: "1234",
+    password: bcrypt.hashSync(password, 10),
   },
   maha: {
     id: "maha",
     email: "maha@maha.com",
-    password: "maha",
+    password: bcrypt.hashSync(password, 10),
   },
 };
 
@@ -139,8 +148,9 @@ app.get("/hello", (req, res) => {
 
 // Route for displaying all the URLs
 app.get("/urls", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   let templateVars = {};
+  console.log(users);
 
   if (user) {
     templateVars = {
@@ -158,7 +168,7 @@ app.get("/urls", (req, res) => {
 
 // Route for creating a new URL and adding it to DB, only allowed for logged in users
 app.post("/urls", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
 
   if (user) {
     //user is logged in
@@ -180,7 +190,7 @@ app.post("/urls", (req, res) => {
 // Route for editing an existing URL from the DB
 app.post("/urls/:id", (req, res) => {
   const URL = req.body.newURL;
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   const urlID = req.params.id;
   const urlObject = urlDatabase[urlID];
 
@@ -210,7 +220,7 @@ app.post("/urls/:id", (req, res) => {
 
 // Route for viewing the create URL form, only allowed for logged in users
 app.get("/urls/new", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
 
   const templateVars = {
     user
@@ -226,7 +236,7 @@ app.get("/urls/new", (req, res) => {
 
 // Route for displaying an individual short URL
 app.get("/urls/:id", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   const urlID = req.params.id;
   const urlObject = urlDatabase[urlID];
 
@@ -265,7 +275,7 @@ app.get("/u/:id", (req, res) => {
   } else {
 
     const longURL = urlObject.longURL;
-    const user = users[req.cookies.user_id];
+    const user = users[req.session.user_id];
 
     if (!user) {
       //user is not logged in
@@ -287,7 +297,7 @@ app.get("/u/:id", (req, res) => {
 
 // Route for delete
 app.post("/urls/:id/delete", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   const urlID = req.params.id;
   const urlObject = urlDatabase[urlID];
 
@@ -312,13 +322,14 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // Route for logout
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  // res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/login");
 });
 
 // Route for displaying registration page
 app.get("/register", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   const templateVars = {
     user
   };
@@ -350,16 +361,18 @@ app.post("/register", (req, res) => {
   users[id] = {
     id,
     email,
-    password
+    password: bcrypt.hashSync(password, 10)
   };
   console.log(users);
-  res.cookie("user_id", id);
+  // eslint-disable-next-line camelcase
+  req.session.user_id = id;
+  // res.cookie("user_id", id);
   res.redirect("/urls");
 });
 
 // Route for viewing login page
 app.get("/login", (req, res) => {
-  const user = users[req.cookies.user_id];
+  const user = users[req.session.user_id];
   const templateVars = {
     user
   };
@@ -388,12 +401,14 @@ app.post("/login", (req, res) => {
     return res.status(403).send("<p>User does not exist!</p><a href=\"/login\">Go back</a>");
   }
   
-  if (user.password !== password) {
+  if (!bcrypt.compareSync(password, user.password)) {
     //incorrect password
     return res.status(403).send("<p>Incorrect password!</p><a href=\"/login\">Go back</a>");
   }
 
-  res.cookie("user_id", user.id);
+  // res.cookie("user_id", user.id);
+  // eslint-disable-next-line camelcase
+  req.session.user_id = user.id;
   res.redirect("/urls");
 
 });
