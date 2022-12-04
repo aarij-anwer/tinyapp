@@ -154,7 +154,6 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
   let templateVars = {};
-  console.log(users);
 
   if (user) {
     templateVars = {
@@ -184,7 +183,6 @@ app.post("/urls", (req, res) => {
     };
     urlDatabase[key] = urlObject;
 
-    console.log(urlDatabase);
     res.redirect("/urls/" + key);
   } else {
     res.status(401).send("<p>You are not logged in. To create a URL, you need to login or register.</p><p>Click <a href=\"/login\">here</a> to login.");
@@ -217,7 +215,6 @@ app.post("/urls/:id", (req, res) => {
       userID: user.id
     };
     urlDatabase[urlID] = urlObject;
-    console.log(urlDatabase);
     res.redirect("/urls/");
   }
 });
@@ -367,10 +364,8 @@ app.post("/register", (req, res) => {
     email,
     password: bcrypt.hashSync(password, 10)
   };
-  console.log(users);
   // eslint-disable-next-line camelcase
   req.session.user_id = id;
-  // res.cookie("user_id", id);
   res.redirect("/urls");
 });
 
@@ -410,7 +405,6 @@ app.post("/login", (req, res) => {
     return res.status(403).send("<p>Incorrect password!</p><a href=\"/login\">Go back</a>");
   }
 
-  // res.cookie("user_id", user.id);
   // eslint-disable-next-line camelcase
   req.session.user_id = user.id;
   res.redirect("/urls");
